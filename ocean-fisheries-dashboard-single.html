@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>해양수산 KPI 대시보드</title>
+    <style>
+:root {
+  color-scheme: light;
+  --bg: #f6f8fb;
+  --panel: #ffffff;
+  --ink: #152033;
+  --muted: #647084;
+  --line: #dce3ec;
+  --teal: #147d7e;
+  --blue: #2c65c8;
+  --green: #2f8f5b;
+  --amber: #b97816;
+  --red: #c84a3d;
+  --violet: #6e5bbf;
+  --shadow: 0 12px 28px rgba(31, 42, 68, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--bg);
+  color: var(--ink);
+  font-family:
+    "Segoe UI",
+    "Malgun Gothic",
+    "Apple SD Gothic Neo",
+    system-ui,
+    sans-serif;
+}
+
+.dashboard-shell {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 28px 0 36px;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 0 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.eyebrow,
+.panel-kicker {
+  margin: 0 0 7px;
+  color: var(--teal);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+h1,
+h2 {
+  margin: 0;
+  letter-spacing: 0;
+}
+
+h1 {
+  font-size: clamp(1.55rem, 2.5vw, 2.35rem);
+  line-height: 1.18;
+}
+
+h2 {
+  font-size: 1.06rem;
+  line-height: 1.35;
+}
+
+.source-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(98px, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.source-summary div {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.source-summary dt {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.source-summary dd {
+  margin: 3px 0 0;
+  font-size: 0.9rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.kpi-card {
+  min-height: 142px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-top: 5px solid var(--teal);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.kpi-card strong {
+  display: block;
+  margin-top: 16px;
+  font-size: clamp(1.5rem, 2.7vw, 2.45rem);
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.kpi-label,
+.kpi-unit {
+  display: block;
+}
+
+.kpi-label {
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.kpi-unit {
+  margin-top: 13px;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.accent-catch {
+  border-top-color: var(--teal);
+}
+
+.accent-export {
+  border-top-color: var(--blue);
+}
+
+.accent-score {
+  border-top-color: var(--violet);
+}
+
+.accent-safety {
+  border-top-color: var(--red);
+}
+
+.insight-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin: 18px 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--line);
+}
+
+.insight-strip div {
+  min-width: 0;
+  padding: 15px 18px;
+  background: #fbfcfe;
+}
+
+.insight-strip span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.77rem;
+  font-weight: 800;
+}
+
+.insight-strip strong {
+  display: block;
+  margin-top: 5px;
+  overflow: hidden;
+  font-size: 1.02rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(330px, 0.85fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
+.panel {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.panel-wide {
+  grid-row: span 2;
+}
+
+.panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.panel-note {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.chart-frame {
+  width: 100%;
+  min-height: 430px;
+  padding-top: 10px;
+}
+
+#monthlyExportChart {
+  display: block;
+  width: 100%;
+  height: 420px;
+}
+
+.axis-label {
+  fill: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.grid-line {
+  stroke: #e7ecf2;
+  stroke-width: 1;
+}
+
+.chart-line {
+  fill: none;
+  stroke: var(--blue);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 4;
+}
+
+.chart-area {
+  fill: rgba(44, 101, 200, 0.1);
+}
+
+.chart-dot {
+  fill: var(--panel);
+  stroke: var(--blue);
+  stroke-width: 3;
+}
+
+.peak-label {
+  fill: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.bar-list,
+.risk-list {
+  display: grid;
+  gap: 13px;
+}
+
+.bar-row,
+.risk-row {
+  display: grid;
+  gap: 8px;
+}
+
+.bar-meta,
+.risk-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.bar-name,
+.risk-name {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.91rem;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-value,
+.risk-value {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.track {
+  position: relative;
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #eaf0f6;
+}
+
+.fill {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--teal);
+  transition: width 700ms ease;
+}
+
+.risk-row {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+}
+
+.risk-detail {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.risk-low .fill {
+  background: var(--green);
+}
+
+.risk-medium .fill {
+  background: var(--amber);
+}
+
+.risk-high .fill {
+  background: var(--red);
+}
+
+@media (max-width: 980px) {
+  .dashboard-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .source-summary,
+  .kpi-grid,
+  .insight-strip,
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .panel-wide {
+    grid-row: auto;
+  }
+
+  .chart-frame {
+    min-height: 340px;
+  }
+
+  #monthlyExportChart {
+    height: 330px;
+  }
+}
+
+@media (max-width: 560px) {
+  .dashboard-shell {
+    width: min(100% - 20px, 1180px);
+    padding-top: 18px;
+  }
+
+  .source-summary {
+    gap: 8px;
+  }
+
+  .source-summary dd,
+  .panel-note {
+    white-space: normal;
+  }
+
+  .kpi-card,
+  .panel {
+    padding: 15px;
+  }
+
+  .kpi-card {
+    min-height: 126px;
+  }
+
+  .panel-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .chart-frame {
+    min-height: 300px;
+  }
+
+  #monthlyExportChart {
+    height: 290px;
+  }
+}
+    </style>
+    <script>
+const dashboardData = {
+  rowCount: 300,
+  dateRange: ["2024-01-03", "2025-12-28"],
+  kpis: {
+    totalCatchTons: 912.36,
+    totalExportUsd: 1319524,
+    averageSatisfaction: 75.55466666666668,
+    totalSafetyIncidents: 141,
+  },
+  topPorts: [
+    { port: "앵커리지", landingValueUsd: 501792, records: 44 },
+    { port: "홋카이도", landingValueUsd: 390339, records: 33 },
+    { port: "시애틀", landingValueUsd: 382311, records: 30 },
+    { port: "보스턴", landingValueUsd: 380366, records: 36 },
+    { port: "샌디에이고", landingValueUsd: 322047, records: 27 },
+  ],
+  monthlyExport: [
+    { period: "2024-01", exportValueUsd: 50952 },
+    { period: "2024-02", exportValueUsd: 43649 },
+    { period: "2024-03", exportValueUsd: 66201 },
+    { period: "2024-04", exportValueUsd: 49830 },
+    { period: "2024-05", exportValueUsd: 53460 },
+    { period: "2024-06", exportValueUsd: 50691 },
+    { period: "2024-07", exportValueUsd: 65898 },
+    { period: "2024-08", exportValueUsd: 73675 },
+    { period: "2024-09", exportValueUsd: 59014 },
+    { period: "2024-10", exportValueUsd: 50639 },
+    { period: "2024-11", exportValueUsd: 56582 },
+    { period: "2024-12", exportValueUsd: 43474 },
+    { period: "2025-01", exportValueUsd: 34910 },
+    { period: "2025-02", exportValueUsd: 47598 },
+    { period: "2025-03", exportValueUsd: 58793 },
+    { period: "2025-04", exportValueUsd: 60736 },
+    { period: "2025-05", exportValueUsd: 68591 },
+    { period: "2025-06", exportValueUsd: 75992 },
+    { period: "2025-07", exportValueUsd: 54657 },
+    { period: "2025-08", exportValueUsd: 57325 },
+    { period: "2025-09", exportValueUsd: 53006 },
+    { period: "2025-10", exportValueUsd: 60214 },
+    { period: "2025-11", exportValueUsd: 43860 },
+    { period: "2025-12", exportValueUsd: 39777 },
+  ],
+  riskIncidents: [
+    { risk: "Low", label: "낮음", incidents: 38, records: 95 },
+    { risk: "Medium", label: "보통", incidents: 79, records: 171 },
+    { risk: "High", label: "높음", incidents: 24, records: 34 },
+  ],
+};
+
+const numberFormatter = new Intl.NumberFormat("ko-KR");
+const oneDecimalFormatter = new Intl.NumberFormat("ko-KR", {
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+});
+
+function setText(id, value) {
+  const node = document.getElementById(id);
+  if (node) node.textContent = value;
+}
+
+function formatUsd(value) {
+  return `$${numberFormatter.format(Math.round(value))}`;
+}
+
+function formatUsdCompact(value) {
+  if (value >= 1000000) return `$${oneDecimalFormatter.format(value / 1000000)}M`;
+  if (value >= 1000) return `$${oneDecimalFormatter.format(value / 1000)}K`;
+  return formatUsd(value);
+}
+
+function formatPeriod(period) {
+  const [year, month] = period.split("-");
+  return `${year}.${month}`;
+}
+
+function renderKpis() {
+  const { kpis } = dashboardData;
+  setText("totalCatch", `${oneDecimalFormatter.format(kpis.totalCatchTons)}톤`);
+  setText("totalExport", formatUsd(kpis.totalExportUsd));
+  setText("avgSatisfaction", `${oneDecimalFormatter.format(kpis.averageSatisfaction)}점`);
+  setText("totalIncidents", `${numberFormatter.format(kpis.totalSafetyIncidents)}건`);
+}
+
+function renderInsights() {
+  const topPort = dashboardData.topPorts[0];
+  const peakMonth = dashboardData.monthlyExport.reduce((best, item) =>
+    item.exportValueUsd > best.exportValueUsd ? item : best,
+  );
+  const peakRisk = dashboardData.riskIncidents.reduce((best, item) =>
+    item.incidents > best.incidents ? item : best,
+  );
+
+  setText("topPortInsight", `${topPort.port} ${formatUsdCompact(topPort.landingValueUsd)}`);
+  setText("peakMonthInsight", `${formatPeriod(peakMonth.period)} ${formatUsdCompact(peakMonth.exportValueUsd)}`);
+  setText("riskInsight", `${peakRisk.label} ${numberFormatter.format(peakRisk.incidents)}건`);
+}
+
+function renderPortBars() {
+  const target = document.getElementById("portBars");
+  const max = Math.max(...dashboardData.topPorts.map((item) => item.landingValueUsd));
+  target.innerHTML = dashboardData.topPorts
+    .map((item, index) => {
+      const width = Math.max((item.landingValueUsd / max) * 100, 4);
+      return `
+        <div class="bar-row">
+          <div class="bar-meta">
+            <span class="bar-name">${index + 1}. ${item.port}</span>
+            <span class="bar-value">${formatUsd(item.landingValueUsd)}</span>
+          </div>
+          <div class="track" aria-hidden="true">
+            <div class="fill" style="width: ${width}%"></div>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function renderRiskBars() {
+  const target = document.getElementById("riskBars");
+  const classByRisk = {
+    Low: "risk-low",
+    Medium: "risk-medium",
+    High: "risk-high",
+  };
+  const max = Math.max(...dashboardData.riskIncidents.map((item) => item.incidents));
+  target.innerHTML = dashboardData.riskIncidents
+    .map((item) => {
+      const width = Math.max((item.incidents / max) * 100, 5);
+      const incidentRate = (item.incidents / item.records) * 100;
+      return `
+        <div class="risk-row ${classByRisk[item.risk]}">
+          <div class="risk-meta">
+            <span class="risk-name">${item.label}</span>
+            <span class="risk-value">${numberFormatter.format(item.incidents)}건</span>
+          </div>
+          <div class="track" aria-hidden="true">
+            <div class="fill" style="width: ${width}%"></div>
+          </div>
+          <div class="risk-detail">
+            <span>레코드 ${numberFormatter.format(item.records)}건</span>
+            <span>레코드당 ${oneDecimalFormatter.format(incidentRate)}%</span>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function svgElement(tag, attributes = {}) {
+  const element = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  Object.entries(attributes).forEach(([key, value]) => {
+    element.setAttribute(key, value);
+  });
+  return element;
+}
+
+function linePath(points) {
+  return points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
+}
+
+function renderMonthlyExportChart() {
+  const svg = document.getElementById("monthlyExportChart");
+  const data = dashboardData.monthlyExport;
+  const width = 780;
+  const height = 420;
+  const padding = { top: 34, right: 26, bottom: 58, left: 70 };
+  const plotWidth = width - padding.left - padding.right;
+  const plotHeight = height - padding.top - padding.bottom;
+  const maxValue = Math.ceil(Math.max(...data.map((item) => item.exportValueUsd)) / 10000) * 10000;
+  const xStep = plotWidth / (data.length - 1);
+  const yScale = (value) => padding.top + plotHeight - (value / maxValue) * plotHeight;
+  const points = data.map((item, index) => ({
+    x: padding.left + index * xStep,
+    y: yScale(item.exportValueUsd),
+    value: item.exportValueUsd,
+    period: item.period,
+  }));
+  const peak = points.reduce((best, item) => (item.value > best.value ? item : best));
+
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  svg.innerHTML = "";
+
+  [0, 0.25, 0.5, 0.75, 1].forEach((tick) => {
+    const y = padding.top + plotHeight - tick * plotHeight;
+    const value = maxValue * tick;
+    svg.appendChild(svgElement("line", {
+      x1: padding.left,
+      x2: width - padding.right,
+      y1: y,
+      y2: y,
+      class: "grid-line",
+    }));
+    const label = svgElement("text", {
+      x: padding.left - 12,
+      y: y + 4,
+      "text-anchor": "end",
+      class: "axis-label",
+    });
+    label.textContent = formatUsdCompact(value);
+    svg.appendChild(label);
+  });
+
+  const area = svgElement("path", {
+    d: `${linePath(points)} L ${points[points.length - 1].x} ${height - padding.bottom} L ${points[0].x} ${height - padding.bottom} Z`,
+    class: "chart-area",
+  });
+  svg.appendChild(area);
+
+  svg.appendChild(svgElement("path", {
+    d: linePath(points),
+    class: "chart-line",
+  }));
+
+  points.forEach((point, index) => {
+    if (index % 3 === 0 || index === points.length - 1) {
+      const label = svgElement("text", {
+        x: point.x,
+        y: height - 25,
+        "text-anchor": "middle",
+        class: "axis-label",
+      });
+      label.textContent = point.period.slice(2);
+      svg.appendChild(label);
+    }
+  });
+
+  points.forEach((point) => {
+    svg.appendChild(svgElement("circle", {
+      cx: point.x,
+      cy: point.y,
+      r: 4,
+      class: "chart-dot",
+    }));
+  });
+
+  const peakText = svgElement("text", {
+    x: Math.min(peak.x + 12, width - 170),
+    y: Math.max(peak.y - 14, 22),
+    class: "peak-label",
+  });
+  peakText.textContent = `최고 ${formatPeriod(peak.period)} ${formatUsdCompact(peak.value)}`;
+  svg.appendChild(peakText);
+}
+
+function initDashboard() {
+  renderKpis();
+  renderInsights();
+  renderPortBars();
+  renderRiskBars();
+  renderMonthlyExportChart();
+}
+
+window.addEventListener("DOMContentLoaded", initDashboard);
+    </script>
+  </head>
+  <body>
+    <main class="dashboard-shell">
+      <header class="dashboard-header">
+        <div>
+          <p class="eyebrow">Ocean Fisheries Sample</p>
+          <h1>해양수산 운영 KPI 대시보드</h1>
+        </div>
+        <dl class="source-summary" aria-label="데이터 개요">
+          <div>
+            <dt>데이터 기간</dt>
+            <dd>2024.01.03 - 2025.12.28</dd>
+          </div>
+          <div>
+            <dt>레코드</dt>
+            <dd>300건</dd>
+          </div>
+          <div>
+            <dt>금액 단위</dt>
+            <dd>USD</dd>
+          </div>
+        </dl>
+      </header>
+
+      <section class="kpi-grid" aria-label="핵심 KPI">
+        <article class="kpi-card accent-catch">
+          <span class="kpi-label">총 어획량</span>
+          <strong id="totalCatch">-</strong>
+          <span class="kpi-unit">catch_tons 합계</span>
+        </article>
+        <article class="kpi-card accent-export">
+          <span class="kpi-label">총 수출액</span>
+          <strong id="totalExport">-</strong>
+          <span class="kpi-unit">export_value_usd 합계</span>
+        </article>
+        <article class="kpi-card accent-score">
+          <span class="kpi-label">평균 만족도</span>
+          <strong id="avgSatisfaction">-</strong>
+          <span class="kpi-unit">public_satisfaction_score 평균</span>
+        </article>
+        <article class="kpi-card accent-safety">
+          <span class="kpi-label">총 안전사고 건수</span>
+          <strong id="totalIncidents">-</strong>
+          <span class="kpi-unit">safety_incident_count 합계</span>
+        </article>
+      </section>
+
+      <section class="insight-strip" aria-label="주요 요약">
+        <div>
+          <span>위판금액 1위 항만</span>
+          <strong id="topPortInsight">-</strong>
+        </div>
+        <div>
+          <span>수출액 최고 월</span>
+          <strong id="peakMonthInsight">-</strong>
+        </div>
+        <div>
+          <span>사고 최다 위험도</span>
+          <strong id="riskInsight">-</strong>
+        </div>
+      </section>
+
+      <section class="dashboard-grid">
+        <article class="panel panel-wide">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-kicker">Trend</p>
+              <h2>월별 수출액 추이</h2>
+            </div>
+            <span class="panel-note">2024-01부터 2025-12까지</span>
+          </div>
+          <div class="chart-frame">
+            <svg id="monthlyExportChart" role="img" aria-label="월별 수출액 추이 선형 차트"></svg>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-kicker">Port Ranking</p>
+              <h2>항만별 위판금액 TOP 5</h2>
+            </div>
+          </div>
+          <div id="portBars" class="bar-list" aria-label="항만별 위판금액 상위 5개"></div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-kicker">Weather Risk</p>
+              <h2>기상위험도별 사고 건수 비교</h2>
+            </div>
+          </div>
+          <div id="riskBars" class="risk-list" aria-label="기상위험도별 사고 건수"></div>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>
