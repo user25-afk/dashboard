@@ -1,0 +1,1354 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>해양수산 KPI 대시보드</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4f7fb;
+        --panel: rgba(255, 255, 255, 0.92);
+        --panel-strong: #ffffff;
+        --ink: #132238;
+        --muted: #64748b;
+        --soft: #e4ebf4;
+        --teal: #0f8b8d;
+        --blue: #2e65d4;
+        --green: #23895b;
+        --amber: #bb7b12;
+        --red: #c4473d;
+        --violet: #6657c7;
+        --cyan: #118ab2;
+        --shadow: 0 18px 40px rgba(20, 32, 54, 0.11);
+        --radius: 8px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        min-width: 320px;
+        margin: 0;
+        background:
+          linear-gradient(90deg, rgba(19, 34, 56, 0.035) 1px, transparent 1px),
+          linear-gradient(0deg, rgba(19, 34, 56, 0.035) 1px, transparent 1px),
+          var(--bg);
+        background-size: 34px 34px, 34px 34px, auto;
+        color: var(--ink);
+        font-family: "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+      }
+
+      body::before {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        content: "";
+        pointer-events: none;
+        background:
+          linear-gradient(120deg, rgba(15, 139, 141, 0.08), transparent 28%),
+          linear-gradient(300deg, rgba(196, 71, 61, 0.07), transparent 24%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.72), transparent 45%);
+      }
+
+      button {
+        font: inherit;
+      }
+
+      .dashboard-shell {
+        width: min(1240px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 24px 0 34px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .brand-chip,
+      .status-chip,
+      .meta-chip {
+        display: inline-flex;
+        align-items: center;
+        min-height: 34px;
+        padding: 8px 11px;
+        border: 1px solid rgba(19, 34, 56, 0.1);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.74);
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 800;
+        white-space: nowrap;
+        box-shadow: 0 8px 24px rgba(28, 42, 70, 0.06);
+      }
+
+      .brand-chip {
+        gap: 8px;
+        color: var(--ink);
+      }
+
+      .brand-mark {
+        width: 18px;
+        height: 18px;
+        border: 2px solid var(--teal);
+        border-radius: 50%;
+        background:
+          linear-gradient(90deg, transparent 45%, var(--teal) 46%, var(--teal) 54%, transparent 55%),
+          linear-gradient(0deg, transparent 45%, var(--teal) 46%, var(--teal) 54%, transparent 55%);
+      }
+
+      .status-chip {
+        gap: 8px;
+      }
+
+      .status-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--green);
+        box-shadow: 0 0 0 0 rgba(35, 137, 91, 0.5);
+        animation: pulse 1.8s ease-out infinite;
+      }
+
+      @keyframes pulse {
+        70% {
+          box-shadow: 0 0 0 10px rgba(35, 137, 91, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(35, 137, 91, 0);
+        }
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .hero-panel,
+      .radar-panel,
+      .kpi-card,
+      .panel {
+        border: 1px solid rgba(19, 34, 56, 0.1);
+        border-radius: var(--radius);
+        background: var(--panel);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(14px);
+      }
+
+      .hero-panel {
+        position: relative;
+        overflow: hidden;
+        min-height: 248px;
+        padding: 28px;
+      }
+
+      .hero-panel::after {
+        position: absolute;
+        right: -80px;
+        bottom: 14px;
+        width: 440px;
+        height: 120px;
+        content: "";
+        opacity: 0.38;
+        background:
+          linear-gradient(135deg, transparent 0 18%, rgba(17, 138, 178, 0.38) 18% 21%, transparent 21% 42%, rgba(15, 139, 141, 0.38) 42% 45%, transparent 45% 100%);
+        transform: rotate(-8deg);
+      }
+
+      .eyebrow,
+      .panel-kicker {
+        margin: 0 0 8px;
+        color: var(--teal);
+        font-size: 0.74rem;
+        font-weight: 900;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+        letter-spacing: 0;
+      }
+
+      h1 {
+        max-width: 760px;
+        font-size: 2.35rem;
+        line-height: 1.16;
+      }
+
+      .hero-copy {
+        position: relative;
+        z-index: 1;
+        max-width: 720px;
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 0.96rem;
+        line-height: 1.7;
+      }
+
+      .hero-meta {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+        margin-top: 24px;
+      }
+
+      .radar-panel {
+        position: relative;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        min-height: 248px;
+        overflow: hidden;
+        padding: 18px;
+      }
+
+      .radar-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 900;
+      }
+
+      .radar {
+        position: relative;
+        align-self: center;
+        justify-self: center;
+        width: 174px;
+        height: 174px;
+        margin: 10px 0;
+        border: 1px solid rgba(15, 139, 141, 0.22);
+        border-radius: 50%;
+        background:
+          linear-gradient(90deg, transparent 49.5%, rgba(15, 139, 141, 0.32) 50%, transparent 50.5%),
+          linear-gradient(0deg, transparent 49.5%, rgba(15, 139, 141, 0.32) 50%, transparent 50.5%),
+          repeating-radial-gradient(circle, rgba(15, 139, 141, 0.24) 0 1px, transparent 1px 35px),
+          rgba(15, 139, 141, 0.04);
+      }
+
+      .radar::before {
+        position: absolute;
+        inset: 0;
+        content: "";
+        border-radius: inherit;
+        background: conic-gradient(from 0deg, rgba(15, 139, 141, 0.58), rgba(15, 139, 141, 0.06) 42deg, transparent 84deg);
+        animation: sweep 4.6s linear infinite;
+      }
+
+      .radar::after {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 9px;
+        height: 9px;
+        content: "";
+        border-radius: 50%;
+        background: var(--red);
+        box-shadow:
+          39px -28px 0 var(--blue),
+          -42px 18px 0 var(--amber),
+          8px 56px 0 var(--green);
+        transform: translate(-50%, -50%);
+      }
+
+      @keyframes sweep {
+        to {
+          transform: rotate(1turn);
+        }
+      }
+
+      .radar-stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .radar-stats div {
+        min-width: 0;
+        padding: 10px;
+        border: 1px solid rgba(19, 34, 56, 0.08);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.78);
+      }
+
+      .radar-stats span {
+        display: block;
+        color: var(--muted);
+        font-size: 0.68rem;
+        font-weight: 800;
+      }
+
+      .radar-stats strong {
+        display: block;
+        margin-top: 4px;
+        overflow: hidden;
+        font-size: 0.91rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 16px;
+      }
+
+      .kpi-card {
+        position: relative;
+        min-height: 154px;
+        overflow: hidden;
+        padding: 17px;
+        transform: translateY(10px);
+        opacity: 0;
+      }
+
+      .mounted .kpi-card,
+      .mounted .panel,
+      .mounted .hero-panel,
+      .mounted .radar-panel {
+        animation: rise-in 560ms ease forwards;
+      }
+
+      .mounted .kpi-card:nth-child(2) {
+        animation-delay: 70ms;
+      }
+
+      .mounted .kpi-card:nth-child(3) {
+        animation-delay: 140ms;
+      }
+
+      .mounted .kpi-card:nth-child(4) {
+        animation-delay: 210ms;
+      }
+
+      @keyframes rise-in {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .kpi-card::before {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 5px;
+        content: "";
+        background: var(--teal);
+      }
+
+      .accent-export::before {
+        background: var(--blue);
+      }
+
+      .accent-score::before {
+        background: var(--violet);
+      }
+
+      .accent-safety::before {
+        background: var(--red);
+      }
+
+      .kpi-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .kpi-label {
+        color: var(--muted);
+        font-size: 0.82rem;
+        font-weight: 900;
+      }
+
+      .kpi-badge {
+        flex: 0 0 auto;
+        padding: 5px 8px;
+        border-radius: 999px;
+        background: rgba(15, 139, 141, 0.1);
+        color: var(--teal);
+        font-size: 0.7rem;
+        font-weight: 900;
+      }
+
+      .accent-export .kpi-badge {
+        background: rgba(46, 101, 212, 0.1);
+        color: var(--blue);
+      }
+
+      .accent-score .kpi-badge {
+        background: rgba(102, 87, 199, 0.1);
+        color: var(--violet);
+      }
+
+      .accent-safety .kpi-badge {
+        background: rgba(196, 71, 61, 0.1);
+        color: var(--red);
+      }
+
+      .kpi-value {
+        display: block;
+        margin-top: 18px;
+        font-size: 2.1rem;
+        font-weight: 920;
+        line-height: 1;
+      }
+
+      .kpi-unit {
+        display: block;
+        margin-top: 9px;
+        color: var(--muted);
+        font-size: 0.74rem;
+        font-weight: 750;
+      }
+
+      .kpi-spark {
+        position: absolute;
+        right: 12px;
+        bottom: 10px;
+        width: 116px;
+        height: 42px;
+        opacity: 0.9;
+      }
+
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) minmax(330px, 0.65fr);
+        gap: 16px;
+        margin-top: 16px;
+      }
+
+      .panel {
+        min-width: 0;
+        padding: 18px;
+        transform: translateY(10px);
+        opacity: 0;
+      }
+
+      .panel-main {
+        min-height: 500px;
+      }
+
+      .panel-heading {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 14px;
+      }
+
+      h2 {
+        font-size: 1.08rem;
+        line-height: 1.35;
+      }
+
+      .panel-note {
+        color: var(--muted);
+        font-size: 0.76rem;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .segmented {
+        display: inline-flex;
+        gap: 3px;
+        padding: 3px;
+        border: 1px solid rgba(19, 34, 56, 0.1);
+        border-radius: 999px;
+        background: rgba(244, 247, 251, 0.9);
+      }
+
+      .segmented button {
+        min-width: 70px;
+        min-height: 30px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 0.76rem;
+        font-weight: 900;
+      }
+
+      .segmented button.active {
+        background: var(--ink);
+        color: #fff;
+        box-shadow: 0 8px 16px rgba(19, 34, 56, 0.14);
+      }
+
+      .chart-wrap {
+        position: relative;
+        min-height: 418px;
+      }
+
+      #exportChart {
+        display: block;
+        width: 100%;
+        height: 410px;
+      }
+
+      .grid-line {
+        stroke: #e6edf5;
+        stroke-width: 1;
+      }
+
+      .axis-label {
+        fill: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .chart-area {
+        fill: rgba(46, 101, 212, 0.11);
+      }
+
+      .chart-line {
+        fill: none;
+        stroke: var(--blue);
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 4;
+        filter: drop-shadow(0 7px 9px rgba(46, 101, 212, 0.2));
+      }
+
+      .chart-dot {
+        fill: var(--panel-strong);
+        stroke: var(--blue);
+        stroke-width: 3;
+      }
+
+      .chart-marker {
+        stroke: var(--red);
+        stroke-dasharray: 4 5;
+        stroke-width: 2;
+      }
+
+      .chart-tip {
+        position: absolute;
+        left: 0;
+        top: 0;
+        min-width: 134px;
+        padding: 9px 10px;
+        border: 1px solid rgba(19, 34, 56, 0.1);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.96);
+        color: var(--ink);
+        font-size: 0.78rem;
+        font-weight: 900;
+        pointer-events: none;
+        box-shadow: 0 12px 26px rgba(20, 32, 54, 0.14);
+        transform: translate(-50%, -118%);
+      }
+
+      .chart-tip span {
+        display: block;
+        margin-top: 3px;
+        color: var(--blue);
+        font-size: 0.92rem;
+      }
+
+      .subgrid {
+        display: grid;
+        gap: 16px;
+      }
+
+      .rank-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .rank-row {
+        width: 100%;
+        padding: 11px;
+        border: 1px solid rgba(19, 34, 56, 0.08);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.74);
+        cursor: pointer;
+        text-align: left;
+        transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+      }
+
+      .rank-row:hover,
+      .rank-row.active {
+        border-color: rgba(15, 139, 141, 0.42);
+        box-shadow: 0 12px 22px rgba(20, 32, 54, 0.08);
+        transform: translateY(-2px);
+      }
+
+      .rank-meta,
+      .risk-meta {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .rank-name,
+      .risk-name {
+        min-width: 0;
+        overflow: hidden;
+        color: var(--ink);
+        font-size: 0.88rem;
+        font-weight: 920;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .rank-value,
+      .risk-value {
+        flex: 0 0 auto;
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 900;
+      }
+
+      .track {
+        height: 10px;
+        margin-top: 9px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #e9eef5;
+      }
+
+      .fill {
+        height: 100%;
+        border-radius: inherit;
+        background: var(--teal);
+        transform-origin: left center;
+        animation: grow-x 780ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+      }
+
+      @keyframes grow-x {
+        from {
+          transform: scaleX(0);
+        }
+        to {
+          transform: scaleX(1);
+        }
+      }
+
+      .port-detail {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        align-items: end;
+        margin-top: 14px;
+        padding: 13px;
+        border: 1px solid rgba(19, 34, 56, 0.08);
+        border-radius: var(--radius);
+        background:
+          linear-gradient(135deg, rgba(15, 139, 141, 0.1), transparent 42%),
+          rgba(255, 255, 255, 0.78);
+      }
+
+      .port-detail span {
+        display: block;
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 900;
+      }
+
+      .port-detail strong {
+        display: block;
+        margin-top: 5px;
+        font-size: 1.32rem;
+      }
+
+      .mini-meter {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: conic-gradient(var(--teal) var(--meter, 0%), #e8eef5 0);
+        display: grid;
+        place-items: center;
+      }
+
+      .mini-meter::after {
+        width: 48px;
+        height: 48px;
+        content: "";
+        border-radius: 50%;
+        background: var(--panel-strong);
+      }
+
+      .risk-list {
+        display: grid;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .risk-row {
+        padding: 12px;
+        border: 1px solid rgba(19, 34, 56, 0.08);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.76);
+      }
+
+      .risk-low .fill {
+        background: var(--green);
+      }
+
+      .risk-medium .fill {
+        background: var(--amber);
+      }
+
+      .risk-high .fill {
+        background: var(--red);
+      }
+
+      .risk-detail {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 800;
+      }
+
+      .summary-strip {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .summary-tile {
+        min-width: 0;
+        padding: 14px 16px;
+        border: 1px solid rgba(19, 34, 56, 0.1);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.82);
+        box-shadow: 0 12px 26px rgba(20, 32, 54, 0.07);
+      }
+
+      .summary-tile span {
+        display: block;
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 900;
+      }
+
+      .summary-tile strong {
+        display: block;
+        margin-top: 5px;
+        overflow: hidden;
+        font-size: 1rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      @media (max-width: 1040px) {
+        .hero,
+        .dashboard-grid,
+        .summary-strip {
+          grid-template-columns: 1fr;
+        }
+
+        .kpi-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .radar-panel {
+          min-height: 220px;
+        }
+      }
+
+      @media (max-width: 660px) {
+        .dashboard-shell {
+          width: min(100% - 20px, 1240px);
+          padding-top: 16px;
+        }
+
+        .topbar,
+        .panel-heading {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        h1 {
+          font-size: 1.78rem;
+        }
+
+        .hero-panel,
+        .radar-panel,
+        .panel,
+        .kpi-card {
+          padding: 15px;
+        }
+
+        .kpi-grid,
+        .radar-stats {
+          grid-template-columns: 1fr;
+        }
+
+        .chart-wrap {
+          min-height: 320px;
+        }
+
+        #exportChart {
+          height: 315px;
+        }
+
+        .segmented {
+          width: 100%;
+        }
+
+        .segmented button {
+          flex: 1;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 1ms !important;
+          animation-iteration-count: 1 !important;
+          scroll-behavior: auto !important;
+          transition-duration: 1ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="dashboard-shell">
+      <div class="topbar">
+        <div class="brand-chip"><span class="brand-mark" aria-hidden="true"></span>Ocean Fisheries KPI</div>
+        <div class="status-chip"><span class="status-dot" aria-hidden="true"></span><span id="liveClock">데이터 동기화 완료</span></div>
+      </div>
+
+      <section class="hero" aria-label="대시보드 개요">
+        <article class="hero-panel">
+          <p class="eyebrow">Integrated Operations View</p>
+          <h1>해양수산 데이터를 한눈에 보는 운영 관제 대시보드</h1>
+          <p class="hero-copy">어획량, 수출액, 만족도, 안전사고, 위판금액, 기상위험도를 같은 화면에서 비교할 수 있도록 핵심 지표와 추이를 재구성했습니다.</p>
+          <div class="hero-meta" aria-label="데이터 요약">
+            <span class="meta-chip">기간 2024.01.03 - 2025.12.28</span>
+            <span class="meta-chip">레코드 300건</span>
+            <span class="meta-chip">금액 USD 기준</span>
+          </div>
+        </article>
+
+        <aside class="radar-panel" aria-label="관제 요약">
+          <div class="radar-head">
+            <span>Marine Signal</span>
+            <span>Live Scan</span>
+          </div>
+          <div class="radar" aria-hidden="true"></div>
+          <div class="radar-stats">
+            <div><span>최고 수출 월</span><strong id="radarPeakMonth">-</strong></div>
+            <div><span>TOP 항만</span><strong id="radarTopPort">-</strong></div>
+            <div><span>사고 최다</span><strong id="radarRisk">-</strong></div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="kpi-grid" aria-label="핵심 KPI">
+        <article class="kpi-card accent-catch">
+          <div class="kpi-top"><span class="kpi-label">총 어획량</span><span class="kpi-badge">CATCH</span></div>
+          <strong class="kpi-value" id="totalCatch">0</strong>
+          <span class="kpi-unit">catch_tons 합계</span>
+          <svg class="kpi-spark" data-spark="catch" role="img" aria-label="어획량 미니 추이"></svg>
+        </article>
+        <article class="kpi-card accent-export">
+          <div class="kpi-top"><span class="kpi-label">총 수출액</span><span class="kpi-badge">EXPORT</span></div>
+          <strong class="kpi-value" id="totalExport">0</strong>
+          <span class="kpi-unit">export_value_usd 합계</span>
+          <svg class="kpi-spark" data-spark="export" role="img" aria-label="수출액 미니 추이"></svg>
+        </article>
+        <article class="kpi-card accent-score">
+          <div class="kpi-top"><span class="kpi-label">평균 만족도</span><span class="kpi-badge">SCORE</span></div>
+          <strong class="kpi-value" id="avgSatisfaction">0</strong>
+          <span class="kpi-unit">public_satisfaction_score 평균</span>
+          <svg class="kpi-spark" data-spark="score" role="img" aria-label="만족도 미니 추이"></svg>
+        </article>
+        <article class="kpi-card accent-safety">
+          <div class="kpi-top"><span class="kpi-label">총 안전사고 건수</span><span class="kpi-badge">SAFETY</span></div>
+          <strong class="kpi-value" id="totalIncidents">0</strong>
+          <span class="kpi-unit">safety_incident_count 합계</span>
+          <svg class="kpi-spark" data-spark="safety" role="img" aria-label="사고 건수 미니 추이"></svg>
+        </article>
+      </section>
+
+      <section class="summary-strip" aria-label="주요 인사이트">
+        <div class="summary-tile"><span>위판금액 1위 항만</span><strong id="topPortInsight">-</strong></div>
+        <div class="summary-tile"><span>수출액 최고 월</span><strong id="peakMonthInsight">-</strong></div>
+        <div class="summary-tile"><span>기상위험도 사고 최다</span><strong id="riskInsight">-</strong></div>
+      </section>
+
+      <section class="dashboard-grid">
+        <article class="panel panel-main">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-kicker">Export Flow</p>
+              <h2>월별 수출액 추이</h2>
+            </div>
+            <div class="segmented" aria-label="수출액 차트 보기">
+              <button class="active" type="button" data-chart-mode="monthly">월별</button>
+              <button type="button" data-chart-mode="quarterly">분기별</button>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <svg id="exportChart" role="img" aria-label="수출액 추이 차트"></svg>
+            <div class="chart-tip" id="chartTip" hidden></div>
+          </div>
+        </article>
+
+        <div class="subgrid">
+          <article class="panel">
+            <div class="panel-heading">
+              <div>
+                <p class="panel-kicker">Port Ranking</p>
+                <h2>항만별 위판금액 TOP 5</h2>
+              </div>
+              <span class="panel-note">landing_value_usd</span>
+            </div>
+            <div class="rank-list" id="portBars"></div>
+            <div class="port-detail" aria-live="polite">
+              <div>
+                <span>선택 항만</span>
+                <strong id="portDetailName">-</strong>
+                <span id="portDetailValue">-</span>
+              </div>
+              <div class="mini-meter" id="portMeter" aria-hidden="true"></div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-heading">
+              <div>
+                <p class="panel-kicker">Weather Risk</p>
+                <h2>기상위험도별 사고 건수 비교</h2>
+              </div>
+              <div class="segmented" aria-label="위험도 비교 기준">
+                <button class="active" type="button" data-risk-mode="count">건수</button>
+                <button type="button" data-risk-mode="rate">비율</button>
+              </div>
+            </div>
+            <div class="risk-list" id="riskBars"></div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const dashboardData = {
+        kpis: {
+          totalCatchTons: 912.36,
+          totalExportUsd: 1319524,
+          averageSatisfaction: 75.55466666666668,
+          totalSafetyIncidents: 141
+        },
+        topPorts: [
+          { port: "앵커리지", landingValueUsd: 501792, records: 44 },
+          { port: "홋카이도", landingValueUsd: 390339, records: 33 },
+          { port: "시애틀", landingValueUsd: 382311, records: 30 },
+          { port: "보스턴", landingValueUsd: 380366, records: 36 },
+          { port: "샌디에이고", landingValueUsd: 322047, records: 27 }
+        ],
+        monthlyExport: [
+          { period: "2024-01", exportValueUsd: 50952 },
+          { period: "2024-02", exportValueUsd: 43649 },
+          { period: "2024-03", exportValueUsd: 66201 },
+          { period: "2024-04", exportValueUsd: 49830 },
+          { period: "2024-05", exportValueUsd: 53460 },
+          { period: "2024-06", exportValueUsd: 50691 },
+          { period: "2024-07", exportValueUsd: 65898 },
+          { period: "2024-08", exportValueUsd: 73675 },
+          { period: "2024-09", exportValueUsd: 59014 },
+          { period: "2024-10", exportValueUsd: 50639 },
+          { period: "2024-11", exportValueUsd: 56582 },
+          { period: "2024-12", exportValueUsd: 43474 },
+          { period: "2025-01", exportValueUsd: 34910 },
+          { period: "2025-02", exportValueUsd: 47598 },
+          { period: "2025-03", exportValueUsd: 58793 },
+          { period: "2025-04", exportValueUsd: 60736 },
+          { period: "2025-05", exportValueUsd: 68591 },
+          { period: "2025-06", exportValueUsd: 75992 },
+          { period: "2025-07", exportValueUsd: 54657 },
+          { period: "2025-08", exportValueUsd: 57325 },
+          { period: "2025-09", exportValueUsd: 53006 },
+          { period: "2025-10", exportValueUsd: 60214 },
+          { period: "2025-11", exportValueUsd: 43860 },
+          { period: "2025-12", exportValueUsd: 39777 }
+        ],
+        riskIncidents: [
+          { risk: "Low", label: "낮음", incidents: 38, records: 95 },
+          { risk: "Medium", label: "보통", incidents: 79, records: 171 },
+          { risk: "High", label: "높음", incidents: 24, records: 34 }
+        ],
+        sparks: {
+          catch: [41, 48, 44, 52, 58, 49, 63, 61, 55, 68, 64, 72],
+          export: [51, 43, 66, 50, 53, 51, 66, 74, 59, 51, 57, 43, 35, 48, 59, 61, 69, 76, 55, 57, 53, 60, 44, 40],
+          score: [72, 75, 77, 74, 79, 76, 81, 78, 75, 80, 77, 76],
+          safety: [3, 6, 5, 7, 8, 5, 9, 7, 6, 8, 5, 4]
+        }
+      };
+
+      const numberFormatter = new Intl.NumberFormat("ko-KR");
+      const oneDecimalFormatter = new Intl.NumberFormat("ko-KR", {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1
+      });
+
+      let chartMode = "monthly";
+      let riskMode = "count";
+      let activeChartPoints = [];
+
+      function byId(id) {
+        return document.getElementById(id);
+      }
+
+      function formatUsd(value) {
+        return "$" + numberFormatter.format(Math.round(value));
+      }
+
+      function formatUsdCompact(value) {
+        if (value >= 1000000) return "$" + oneDecimalFormatter.format(value / 1000000) + "M";
+        if (value >= 1000) return "$" + oneDecimalFormatter.format(value / 1000) + "K";
+        return formatUsd(value);
+      }
+
+      function formatPeriod(period) {
+        const parts = period.split("-");
+        return parts[0] + "." + parts[1];
+      }
+
+      function svgElement(tag, attributes) {
+        const element = document.createElementNS("http://www.w3.org/2000/svg", tag);
+        Object.entries(attributes || {}).forEach(function(entry) {
+          element.setAttribute(entry[0], entry[1]);
+        });
+        return element;
+      }
+
+      function linePath(points) {
+        return points.map(function(point, index) {
+          return (index === 0 ? "M " : "L ") + point.x + " " + point.y;
+        }).join(" ");
+      }
+
+      function animateNumber(target, value, options) {
+        const config = Object.assign({ prefix: "", suffix: "", decimals: 0, duration: 980 }, options || {});
+        const start = performance.now();
+        function frame(now) {
+          const progress = Math.min((now - start) / config.duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          const current = value * eased;
+          const rendered = config.decimals > 0
+            ? oneDecimalFormatter.format(current)
+            : numberFormatter.format(Math.round(current));
+          target.textContent = config.prefix + rendered + config.suffix;
+          if (progress < 1) requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+      }
+
+      function renderKpis() {
+        animateNumber(byId("totalCatch"), dashboardData.kpis.totalCatchTons, { suffix: "톤", decimals: 1 });
+        animateNumber(byId("totalExport"), dashboardData.kpis.totalExportUsd, { prefix: "$" });
+        animateNumber(byId("avgSatisfaction"), dashboardData.kpis.averageSatisfaction, { suffix: "점", decimals: 1 });
+        animateNumber(byId("totalIncidents"), dashboardData.kpis.totalSafetyIncidents, { suffix: "건" });
+      }
+
+      function renderSparks() {
+        document.querySelectorAll(".kpi-spark").forEach(function(svg) {
+          const key = svg.dataset.spark;
+          const values = dashboardData.sparks[key];
+          const width = 116;
+          const height = 42;
+          const min = Math.min.apply(null, values);
+          const max = Math.max.apply(null, values);
+          const range = max - min || 1;
+          const points = values.map(function(value, index) {
+            return {
+              x: 5 + index * ((width - 10) / (values.length - 1)),
+              y: 6 + (1 - (value - min) / range) * (height - 12)
+            };
+          });
+          const color = key === "export" ? "#2e65d4" : key === "score" ? "#6657c7" : key === "safety" ? "#c4473d" : "#0f8b8d";
+          svg.setAttribute("viewBox", "0 0 " + width + " " + height);
+          svg.innerHTML = "";
+          svg.appendChild(svgElement("path", {
+            d: linePath(points),
+            fill: "none",
+            stroke: color,
+            "stroke-width": 3,
+            "stroke-linecap": "round",
+            "stroke-linejoin": "round"
+          }));
+          points.forEach(function(point, index) {
+            if (index === points.length - 1) {
+              svg.appendChild(svgElement("circle", {
+                cx: point.x,
+                cy: point.y,
+                r: 3.5,
+                fill: "#fff",
+                stroke: color,
+                "stroke-width": 2
+              }));
+            }
+          });
+        });
+      }
+
+      function getQuarterlyData() {
+        const grouped = {};
+        dashboardData.monthlyExport.forEach(function(item) {
+          const parts = item.period.split("-");
+          const quarter = Math.ceil(Number(parts[1]) / 3);
+          const key = parts[0] + "-Q" + quarter;
+          grouped[key] = (grouped[key] || 0) + item.exportValueUsd;
+        });
+        return Object.keys(grouped).sort().map(function(key) {
+          return { period: key, exportValueUsd: grouped[key] };
+        });
+      }
+
+      function renderExportChart() {
+        const svg = byId("exportChart");
+        const data = chartMode === "quarterly" ? getQuarterlyData() : dashboardData.monthlyExport;
+        const width = 820;
+        const height = 410;
+        const padding = { top: 34, right: 28, bottom: 58, left: 72 };
+        const plotWidth = width - padding.left - padding.right;
+        const plotHeight = height - padding.top - padding.bottom;
+        const maxValue = Math.ceil(Math.max.apply(null, data.map(function(item) { return item.exportValueUsd; })) / 10000) * 10000;
+        const xStep = data.length > 1 ? plotWidth / (data.length - 1) : plotWidth;
+        const yScale = function(value) {
+          return padding.top + plotHeight - (value / maxValue) * plotHeight;
+        };
+        const points = data.map(function(item, index) {
+          return {
+            x: padding.left + index * xStep,
+            y: yScale(item.exportValueUsd),
+            value: item.exportValueUsd,
+            period: item.period
+          };
+        });
+        activeChartPoints = points;
+        svg.setAttribute("viewBox", "0 0 " + width + " " + height);
+        svg.innerHTML = "";
+
+        [0, 0.25, 0.5, 0.75, 1].forEach(function(tick) {
+          const y = padding.top + plotHeight - tick * plotHeight;
+          const value = maxValue * tick;
+          svg.appendChild(svgElement("line", {
+            x1: padding.left,
+            x2: width - padding.right,
+            y1: y,
+            y2: y,
+            class: "grid-line"
+          }));
+          const label = svgElement("text", {
+            x: padding.left - 12,
+            y: y + 4,
+            "text-anchor": "end",
+            class: "axis-label"
+          });
+          label.textContent = formatUsdCompact(value);
+          svg.appendChild(label);
+        });
+
+        const areaPath = linePath(points) + " L " + points[points.length - 1].x + " " + (height - padding.bottom) + " L " + points[0].x + " " + (height - padding.bottom) + " Z";
+        svg.appendChild(svgElement("path", { d: areaPath, class: "chart-area" }));
+
+        const line = svgElement("path", { d: linePath(points), class: "chart-line" });
+        svg.appendChild(line);
+        const length = line.getTotalLength ? line.getTotalLength() : 0;
+        if (length) {
+          line.style.strokeDasharray = String(length);
+          line.style.strokeDashoffset = String(length);
+          requestAnimationFrame(function() {
+            line.style.transition = "stroke-dashoffset 900ms ease";
+            line.style.strokeDashoffset = "0";
+          });
+        }
+
+        points.forEach(function(point, index) {
+          const shouldLabel = chartMode === "quarterly" || index % 3 === 0 || index === points.length - 1;
+          if (shouldLabel) {
+            const label = svgElement("text", {
+              x: point.x,
+              y: height - 25,
+              "text-anchor": "middle",
+              class: "axis-label"
+            });
+            label.textContent = chartMode === "quarterly" ? point.period.replace("-", " ") : point.period.slice(2);
+            svg.appendChild(label);
+          }
+        });
+
+        points.forEach(function(point) {
+          svg.appendChild(svgElement("circle", {
+            cx: point.x,
+            cy: point.y,
+            r: 4,
+            class: "chart-dot"
+          }));
+        });
+
+        const peak = points.reduce(function(best, item) {
+          return item.value > best.value ? item : best;
+        }, points[0]);
+        svg.appendChild(svgElement("line", {
+          x1: peak.x,
+          x2: peak.x,
+          y1: padding.top,
+          y2: height - padding.bottom,
+          class: "chart-marker"
+        }));
+      }
+
+      function renderInsights() {
+        const topPort = dashboardData.topPorts[0];
+        const peakMonth = dashboardData.monthlyExport.reduce(function(best, item) {
+          return item.exportValueUsd > best.exportValueUsd ? item : best;
+        }, dashboardData.monthlyExport[0]);
+        const peakRisk = dashboardData.riskIncidents.reduce(function(best, item) {
+          return item.incidents > best.incidents ? item : best;
+        }, dashboardData.riskIncidents[0]);
+        byId("topPortInsight").textContent = topPort.port + " " + formatUsdCompact(topPort.landingValueUsd);
+        byId("peakMonthInsight").textContent = formatPeriod(peakMonth.period) + " " + formatUsdCompact(peakMonth.exportValueUsd);
+        byId("riskInsight").textContent = peakRisk.label + " " + numberFormatter.format(peakRisk.incidents) + "건";
+        byId("radarPeakMonth").textContent = formatPeriod(peakMonth.period);
+        byId("radarTopPort").textContent = topPort.port;
+        byId("radarRisk").textContent = peakRisk.label;
+      }
+
+      function renderPortBars(activeIndex) {
+        const target = byId("portBars");
+        const max = Math.max.apply(null, dashboardData.topPorts.map(function(item) { return item.landingValueUsd; }));
+        target.innerHTML = dashboardData.topPorts.map(function(item, index) {
+          const width = Math.max((item.landingValueUsd / max) * 100, 5);
+          const active = index === activeIndex ? " active" : "";
+          return '<button class="rank-row' + active + '" type="button" data-port-index="' + index + '">' +
+            '<div class="rank-meta"><span class="rank-name">' + (index + 1) + ". " + item.port + '</span><span class="rank-value">' + formatUsd(item.landingValueUsd) + '</span></div>' +
+            '<div class="track" aria-hidden="true"><div class="fill" style="width:' + width + '%"></div></div>' +
+          '</button>';
+        }).join("");
+        target.querySelectorAll(".rank-row").forEach(function(button) {
+          button.addEventListener("click", function() {
+            const index = Number(button.dataset.portIndex);
+            renderPortBars(index);
+            renderPortDetail(index);
+          });
+        });
+      }
+
+      function renderPortDetail(index) {
+        const item = dashboardData.topPorts[index];
+        const max = dashboardData.topPorts[0].landingValueUsd;
+        const percent = Math.round((item.landingValueUsd / max) * 100);
+        byId("portDetailName").textContent = item.port;
+        byId("portDetailValue").textContent = formatUsd(item.landingValueUsd) + " · " + numberFormatter.format(item.records) + "건";
+        byId("portMeter").style.setProperty("--meter", percent + "%");
+      }
+
+      function renderRiskBars() {
+        const target = byId("riskBars");
+        const classByRisk = { Low: "risk-low", Medium: "risk-medium", High: "risk-high" };
+        const values = dashboardData.riskIncidents.map(function(item) {
+          return riskMode === "rate" ? (item.incidents / item.records) * 100 : item.incidents;
+        });
+        const max = Math.max.apply(null, values);
+        target.innerHTML = dashboardData.riskIncidents.map(function(item, index) {
+          const value = values[index];
+          const width = Math.max((value / max) * 100, 5);
+          const rate = (item.incidents / item.records) * 100;
+          const display = riskMode === "rate" ? oneDecimalFormatter.format(rate) + "%" : numberFormatter.format(item.incidents) + "건";
+          return '<div class="risk-row ' + classByRisk[item.risk] + '">' +
+            '<div class="risk-meta"><span class="risk-name">' + item.label + '</span><span class="risk-value">' + display + '</span></div>' +
+            '<div class="track" aria-hidden="true"><div class="fill" style="width:' + width + '%"></div></div>' +
+            '<div class="risk-detail"><span>레코드 ' + numberFormatter.format(item.records) + '건</span><span>사고 ' + numberFormatter.format(item.incidents) + '건</span></div>' +
+          '</div>';
+        }).join("");
+      }
+
+      function attachControls() {
+        document.querySelectorAll("[data-chart-mode]").forEach(function(button) {
+          button.addEventListener("click", function() {
+            chartMode = button.dataset.chartMode;
+            document.querySelectorAll("[data-chart-mode]").forEach(function(item) {
+              item.classList.toggle("active", item === button);
+            });
+            renderExportChart();
+          });
+        });
+        document.querySelectorAll("[data-risk-mode]").forEach(function(button) {
+          button.addEventListener("click", function() {
+            riskMode = button.dataset.riskMode;
+            document.querySelectorAll("[data-risk-mode]").forEach(function(item) {
+              item.classList.toggle("active", item === button);
+            });
+            renderRiskBars();
+          });
+        });
+      }
+
+      function attachChartHover() {
+        const svg = byId("exportChart");
+        const tip = byId("chartTip");
+        svg.addEventListener("pointermove", function(event) {
+          if (!activeChartPoints.length) return;
+          const rect = svg.getBoundingClientRect();
+          const ratioX = 820 / rect.width;
+          const x = (event.clientX - rect.left) * ratioX;
+          const nearest = activeChartPoints.reduce(function(best, point) {
+            return Math.abs(point.x - x) < Math.abs(best.x - x) ? point : best;
+          }, activeChartPoints[0]);
+          tip.hidden = false;
+          tip.style.left = (nearest.x / 820 * rect.width) + "px";
+          tip.style.top = (nearest.y / 410 * rect.height) + "px";
+          tip.innerHTML = (chartMode === "quarterly" ? nearest.period.replace("-", " ") : formatPeriod(nearest.period)) + "<span>" + formatUsd(nearest.value) + "</span>";
+        });
+        svg.addEventListener("pointerleave", function() {
+          tip.hidden = true;
+        });
+      }
+
+      function updateClock() {
+        const now = new Date();
+        const time = now.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+        byId("liveClock").textContent = "동기화 " + time;
+      }
+
+      function initDashboard() {
+        document.body.classList.add("mounted");
+        renderKpis();
+        renderSparks();
+        renderInsights();
+        renderExportChart();
+        renderPortBars(0);
+        renderPortDetail(0);
+        renderRiskBars();
+        attachControls();
+        attachChartHover();
+        updateClock();
+        setInterval(updateClock, 60000);
+      }
+
+      document.addEventListener("DOMContentLoaded", initDashboard);
+    </script>
+  </body>
+</html>
